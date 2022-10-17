@@ -7,9 +7,10 @@ ARG SPEEX_VERSION=1.2.1
 ARG SPEEX_URL="https://github.com/xiph/speex/archive/Speex-$SPEEX_VERSION.tar.gz"
 ARG SPEEX_SHA256=beaf2642e81a822eaade4d9ebf92e1678f301abfc74a29159c4e721ee70fdce0
 
-# bump: alpine /FROM alpine:([\d.]+)/ docker:alpine|^3
-# bump: alpine link "Release notes" https://alpinelinux.org/posts/Alpine-$LATEST-released.html
-FROM alpine:3.16.2 AS base
+# Must be specified
+ARG ALPINE_VERSION
+
+FROM alpine:${ALPINE_VERSION} AS base
 
 FROM base AS download
 ARG SPEEX_URL
@@ -31,10 +32,15 @@ COPY --from=download /tmp/speex/ /tmp/speex/
 WORKDIR /tmp/speex
 RUN \
   apk add --no-cache --virtual build \
-    build-base autoconf automake libtool && \
+    build-base autoconf automake libtool pkgconf && \
   ./autogen.sh && \
   ./configure --disable-shared --enable-static && \
   make -j$(nproc) install && \
+  # Sanity tests
+  pkg-config --exists --modversion --path speex && \
+  ar -t /usr/local/lib/libspeex.a && \
+  readelf -h /usr/local/lib/libspeex.a && \
+  # Cleanup
   apk del build
 
 FROM scratch
