@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 
 # bump: speex /SPEEX_VERSION=([\d.]+)/ https://github.com/xiph/speex.git|*
 # bump: speex after ./hashupdate Dockerfile SPEEX $LATEST
